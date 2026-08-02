@@ -82,6 +82,7 @@
 
 <script>
   // Subscriber milestone goals
+  <script>
   const goals = [
     50, 80, 100, 200, 400, 800, 1000,
     2000, 4000, 8000, 9000, 10000,
@@ -89,7 +90,8 @@
     70000, 90000, 100000
   ];
 
-  // Show goals in list
+  const CHANNEL_ID = "UC7qHCN-73rDlEHPO6cpy8Tw";
+
   const goalList = document.getElementById("goal-list");
   goals.forEach(g => {
     const li = document.createElement("li");
@@ -97,31 +99,46 @@
     goalList.appendChild(li);
   });
 
-  // Fetch subs from third-party API (no API key)
+  // Try multiple APIs for better reliability
+  const API_SOURCES = [
+    `https://api.socialcounts.org/youtube-live-subscriber-count?channelid=${CHANNEL_ID}`,
+    `https://mixerno.space/api/youtube-live-subscriber-count/${CHANNEL_ID}`
+  ];
+
   async function fetchSubs() {
-    const CHANNEL_ID = "UC7qHCN-73rDlEHPO6cpy8Tw"; // your real channel ID
-    const url = `https://api.socialcounts.org/youtube-live-subscriber-count?channelid=${CHANNEL_ID}`;
+    let subs = null;
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
+    for (const url of API_SOURCES) {
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-      const subs = data.subscriberCount;
-      document.getElementById("sub-info").textContent =
-        "Current Subscribers: " + subs;
+        // SocialCounts format
+        if (data.subscriberCount) subs = data.subscriberCount;
 
-      updateProgress(subs);
-    } catch (error) {
-      document.getElementById("sub-info").textContent =
-        "Error loading subscriber count.";
-      console.error(error);
+        // Mixerno format
+        if (data.count) subs = data.count;
+
+        if (subs !== null && !isNaN(subs)) break;
+      } catch (e) {
+        console.log("API failed, trying next source...");
+      }
     }
+
+    // Final fallback
+    if (subs === null || isNaN(subs)) subs = 0;
+
+    document.getElementById("sub-info").textContent =
+      "Current Subscribers: " + subs;
+
+    updateProgress(subs);
   }
 
-  // Update progress bar toward next goal
   function updateProgress(subs) {
     const nextGoal = goals.find(g => g > subs) || goals[goals.length - 1];
-    const progressPercent = Math.min((subs / nextGoal) * 100, 100);
+    let progressPercent = (subs / nextGoal) * 100;
+
+    if (isNaN(progressPercent)) progressPercent = 0;
 
     document.getElementById("progress-bar").style.width =
       progressPercent + "%";
@@ -131,6 +148,8 @@
   }
 
   fetchSubs();
+</script>
+
 </script>
 
 </body>
