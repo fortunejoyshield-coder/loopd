@@ -41,7 +41,7 @@
 </head>
 <body>
 
-  <h1>Saharsh Subscriber Tracker</h1>
+  <h1>My channels/h1>
   <p id="sub-info">Loading subscriber count...</p>
 
   <div id="progress-container">
@@ -102,6 +102,7 @@
         subs = WEEKLY_BACKUP;
         console.log("Using weekly backup subscriber count:", subs);
       }
+      
 
       updateProgress(subs);
     }
@@ -121,6 +122,7 @@
     fetchSubsHybrid();
     setInterval(fetchSubsHybrid, 5000);
   </script>
+    
 
 </body>
 </html>
