@@ -81,8 +81,6 @@
 </div>
 
 <script>
-  // Subscriber milestone goals
-  <script>
   const goals = [
     50, 80, 100, 200, 400, 800, 1000,
     2000, 4000, 8000, 9000, 10000,
@@ -92,6 +90,13 @@
 
   const CHANNEL_ID = "UC7qHCN-73rDlEHPO6cpy8Tw";
 
+  // Three APIs for instant update + fallback
+  const API_SOURCES = [
+    `https://api.socialcounts.org/youtube-live-subscriber-count?channelid=${CHANNEL_ID}`,
+    `https://mixerno.space/api/youtube-live-subscriber-count/${CHANNEL_ID}`,
+    `https://api.pepeizq.dev/youtube/${CHANNEL_ID}`
+  ];
+
   const goalList = document.getElementById("goal-list");
   goals.forEach(g => {
     const li = document.createElement("li");
@@ -99,25 +104,20 @@
     goalList.appendChild(li);
   });
 
-  // Try multiple APIs for better reliability
-  const API_SOURCES = [
-    `https://api.socialcounts.org/youtube-live-subscriber-count?channelid=${CHANNEL_ID}`,
-    `https://mixerno.space/api/youtube-live-subscriber-count/${CHANNEL_ID}`
-  ];
-
-  async function fetchSubs() {
+  async function fetchSubsInstant() {
     let subs = null;
 
     for (const url of API_SOURCES) {
       try {
-        const response = await fetch(url);
+        const response = await fetch(url + "&t=" + Date.now(), {
+          cache: "no-store"
+        });
+
         const data = await response.json();
 
-        // SocialCounts format
         if (data.subscriberCount) subs = data.subscriberCount;
-
-        // Mixerno format
         if (data.count) subs = data.count;
+        if (data.est_subs) subs = data.est_subs;
 
         if (subs !== null && !isNaN(subs)) break;
       } catch (e) {
@@ -125,7 +125,6 @@
       }
     }
 
-    // Final fallback
     if (subs === null || isNaN(subs)) subs = 0;
 
     document.getElementById("sub-info").textContent =
@@ -147,10 +146,12 @@
       ` | Next goal: ${nextGoal} subs (${progressPercent.toFixed(1)}% there)`;
   }
 
-  fetchSubs();
+  // INSTANT UPDATE: refresh every 5 seconds
+  fetchSubsInstant();
+  setInterval(fetchSubsInstant, 5000);
 </script>
 
-</script>
+
 
 </body>
 </html>
